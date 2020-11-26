@@ -2078,6 +2078,131 @@ class PerfParser(LineParser):
         return function
 
 
+class PerfFoldedParser(LineParser):
+    """Parser for linux perf stackcollapse.pl callgraph output.
+
+    Understands the files output by stackcollapse.pl script from
+    https://github.com/brendangregg/FlameGraph
+
+    It expects output generated with
+
+        perf record -g
+        perf script | ./FlameGraph/stackcollapse-perf.pl | gprof2dot.py --format=perf-folded
+
+    Useful for visualization of data from async-profiler
+    (https://github.com/jvm-profiling-tools/async-profiler):
+
+    async-profiler/profiler.sh ... -o collapsed -f perf.folded ...
+    gprof2dot.py -f perf-folded perf.folded
+
+    """
+
+    def __init__(self, infile):
+        LineParser.__init__(self, infile)
+        self.profile = Profile()
+
+    def readline(self):
+        # Override LineParser.readline to ignore comment lines
+        while True:
+            LineParser.readline(self)
+            if self.eof() or not self.lookahead().startswith('#'):
+                break
+
+    # TODO: this is a copy-paste from PerfParser
+    def parse(self):
+        # read lookahead
+        self.readline()
+
+        profile = self.profile
+        profile[SAMPLES] = 0
+        while not self.eof():
+            self.parse_event()
+
+        # compute derived data
+        profile.validate()
+        profile.find_cycles()
+        profile.ratio(TIME_RATIO, SAMPLES)
+        profile.call_ratios(SAMPLES2)
+        if totalMethod == "callratios":
+            # Heuristic approach.  TOTAL_SAMPLES is unused.
+            profile.integrate(TOTAL_TIME_RATIO, TIME_RATIO)
+        elif totalMethod == "callstacks":
+            # Use the actual call chains for functions.
+            profile[TOTAL_SAMPLES] = profile[SAMPLES]
+            profile.ratio(TOTAL_TIME_RATIO, TOTAL_SAMPLES)
+            # Then propagate that total time to the calls.
+            for function in compat_itervalues(profile.functions):
+                for call in compat_itervalues(function.calls):
+                    if call.ratio is not None:
+                        callee = profile.functions[call.callee_id]
+                        call[TOTAL_TIME_RATIO] = call.ratio * callee[TOTAL_TIME_RATIO]
+        else:
+            assert False
+
+        return profile
+
+
+    # TODO: this is a copy-paste from PerfParser
+    def parse_event(self):
+        if self.eof():
+            return
+
+        line = self.consume()
+        assert line
+        
+        callchain, count = self.parse_callchain(line)
+
+        callee = callchain[0]
+        callee[SAMPLES] += count
+        self.profile[SAMPLES] += count
+
+        for caller in callchain[1:]:
+            try:
+                call = caller.calls[callee.id]
+            except KeyError:
+                call = Call(callee.id)
+                call[SAMPLES2] = count
+                caller.add_call(call)
+            else:
+                call[SAMPLES2] += count
+
+            callee = caller
+
+        # Increment TOTAL_SAMPLES only once on each function.
+        stack = set(callchain)
+        for function in stack:
+            function[TOTAL_SAMPLES] += count
+
+
+    def parse_callchain(self, line):
+        # The line looks like:
+        #
+        # a;b;c(int x);d 10
+        #
+        # Function names are separated by ';', samples count is in the
+        # end. Space could be present in function names.
+        last_space_idx = line.rfind(' ')
+        assert last_space_idx
+
+        function_names = line[0:last_space_idx].split(';')
+        count = int(line[last_space_idx:])
+        
+        function_names.reverse()
+
+        # TODO: this is a copy-paste from PerfParser
+        def find_function(name):
+            try:
+                return self.profile.functions[name]
+            except KeyError:
+                function = Function(name, name)
+                function[SAMPLES] = 0
+                function[TOTAL_SAMPLES] = 0
+                self.profile.add_function(function)
+                return function
+
+        return ([find_function(n) for n in function_names], count)
+    
+
 class OprofileParser(LineParser):
     """Parser for oprofile callgraph output.
     
@@ -2908,6 +3033,7 @@ formats = {
     "json": JsonParser,
     "oprofile": OprofileParser,
     "perf": PerfParser,
+    "perf-folded": PerfFoldedParser,
     "prof": GprofParser,
     "pstats": PstatsParser,
     "sleepy": SleepyParser,
