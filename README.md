@@ -200,6 +200,14 @@ See [Russell Power's blog post](http://rjp.io/2012/07/03/java-profiling/) for de
     # TODO: add an encoding flag to tell gprof2dot how to decode the profile file.
     iconv -f ISO-8859-1 -t UTF-8 out.user_stacks | gprof2dot.py -f dtrace
 
+### Async profiler
+
+    # Assume that profiler.sh comes from repository:
+    # https://github.com/jvm-profiling-tools/async-profiler
+
+    profiler.sh ... -o collapsed -f perf.folded ...
+    gprof2dot.py -f perf-folded perf.folded | dot -Tpng -o output.png
+
 ## Output
 
 A node in the output graph represents a function and has the following layout:
