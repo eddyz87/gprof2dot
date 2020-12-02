@@ -1,0 +1,13 @@
+recursion.out;__GI___tunables_init 1
+recursion.out;__libc_start_main;main;a 3698
+recursion.out;__libc_start_main;main;a;__vdso_gettimeofday 1
+recursion.out;__libc_start_main;main;a;__vdso_gettimeofday;[[vdso]] 2
+recursion.out;__libc_start_main;main;a;b 3689
+recursion.out;__libc_start_main;main;a;b;__vdso_gettimeofday 3
+recursion.out;__libc_start_main;main;a;b;__vdso_gettimeofday;[[vdso]] 4
+recursion.out;__libc_start_main;main;a;b;a 3708
+recursion.out;__libc_start_main;main;a;b;a;__vdso_gettimeofday 2
+recursion.out;__libc_start_main;main;a;b;a;__vdso_gettimeofday;[[vdso]] 1
+recursion.out;_start 9
+recursion.out;do_lookup_x 1
+recursion.out;open_verify.constprop.0 1

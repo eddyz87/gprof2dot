@@ -1,0 +1,11 @@
+diamond.out;__GI___tunables_init 1
+diamond.out;__libc_start_main;main;a;b;d 3792
+diamond.out;__libc_start_main;main;a;b;d;[[vdso]] 1
+diamond.out;__libc_start_main;main;a;b;d;__vdso_gettimeofday 2
+diamond.out;__libc_start_main;main;a;b;d;__vdso_gettimeofday;[[vdso]] 4
+diamond.out;__libc_start_main;main;a;c;d 3705
+diamond.out;__libc_start_main;main;a;c;d;__vdso_gettimeofday 1
+diamond.out;__libc_start_main;main;a;c;d;__vdso_gettimeofday;[[vdso]] 2
+diamond.out;_init 1
+diamond.out;_start 9
+diamond.out;mmap64 1

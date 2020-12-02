@@ -1,0 +1,8 @@
+tree.out;__libc_start_main;main;a;b 3692
+tree.out;__libc_start_main;main;a;b;__vdso_gettimeofday;[[vdso]] 5
+tree.out;__libc_start_main;main;a;c 3733
+tree.out;__libc_start_main;main;a;c;__vdso_gettimeofday 1
+tree.out;__libc_start_main;main;a;c;__vdso_gettimeofday;[[vdso]] 2
+tree.out;_dl_map_object;__GI___open64_nocancel 1
+tree.out;_dl_start_user;_dl_start 1
+tree.out;_start 7

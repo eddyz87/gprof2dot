@@ -38,6 +38,7 @@ formats = [
     "json",
     "oprofile",
     "perf",
+    "perf-folded",
     "prof",
     "pstats",
     "sleepy",
